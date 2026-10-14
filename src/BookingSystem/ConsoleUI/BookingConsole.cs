@@ -18,7 +18,15 @@ public class BookingConsole(BookingService service)
             switch (option)
             {
                 case "1":
-                    ShowBookings(service.GetActiveBookings());
+                    var activeBookings = service.GetActiveBookings();
+                    if (activeBookings.Count == 0) // Check if there are no active bookings
+                    {
+                        Console.WriteLine("No active bookings were found.");
+                    }
+                    else // otherwise display the active bookings
+                    {
+                        ShowBookings(activeBookings);
+                    }
                     break;
                 case "2":
                     SearchBookings();

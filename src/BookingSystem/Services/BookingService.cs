@@ -15,8 +15,12 @@ public class BookingService(IBookingRepository repository)
 
     public IReadOnlyList<Booking> GetActiveBookings()
     {
-        // This method has not been completed.
-        return repository.GetAll();
+        return repository.GetAll()
+            .Where(booking => 
+                !booking.IsCancelled)
+            .OrderBy(booking => booking.Date) //sort by date
+            .ThenBy(booking => booking.StartTime) //then sort by start time
+            .ToList();
     }
 
     public IReadOnlyList<Booking> Search(string searchTerm)
@@ -24,7 +28,7 @@ public class BookingService(IBookingRepository repository)
         return repository.GetAll()
             .Where(booking =>
                 !booking.IsCancelled &&
-                booking.CustomerName.Contains(searchTerm))
+                booking.CustomerName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
             .ToList();
     }
 
@@ -46,7 +50,20 @@ public class BookingService(IBookingRepository repository)
 
     public BookingResult Cancel(int bookingId)
     {
-        throw new NotImplementedException();
+        var booking = repository.GetAll()
+            .FirstOrDefault(booking => booking.Id == bookingId); //find booking by id
+
+        if (booking == null) //check if booking exists
+        {
+            return BookingResult.Failure($"Booking {bookingId} was not found.");
+        }
+        else if (booking.IsCancelled) //check if booking is already cancelled
+        {
+            return BookingResult.Failure($"Booking {bookingId} is already cancelled.");
+        }
+        booking.IsCancelled = true; //mark booking as cancelled
+        repository.Save();
+        return BookingResult.Success($"Booking {bookingId} has been cancelled.");
     }
 
     private BookingResult Validate(Booking booking)
